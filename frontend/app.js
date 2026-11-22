@@ -1,7 +1,7 @@
 /* Sai Creation storefront: cloud-backed products/settings; cart and wishlist remain visitor-local. */
 (() => {
 "use strict";
-const API = (window.SAI_CONFIG?.API_BASE || "").replace(/\/$/, "");
+const API = (window.SAI_CONFIG?.API_BASE || "https://saicreationswebsite.onrender.com").replace(/\/$/, "");
 const $ = s => document.querySelector(s);
 const $$ = s => [...document.querySelectorAll(s)];
 const state = {products:[],settings:{},cart:JSON.parse(localStorage.getItem("sc_cart")||"[]"),wishlist:JSON.parse(localStorage.getItem("sc_wish")||"[]"),category:"All",page:1,search:"",sort:"featured",token:sessionStorage.getItem("sc_admin_token")||""};
