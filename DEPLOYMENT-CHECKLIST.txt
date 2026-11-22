@@ -1,0 +1,15 @@
+SAI CREATION DEPLOYMENT CHECKLIST
+
+[ ] Create Turso database; save URL and auth token privately.
+[ ] Create Cloudinary account; save cloud name, API key and API secret privately.
+[ ] Add backend folder and render.yaml to GitHub.
+[ ] Deploy Render service and set all environment variables.
+[ ] Verify /health.
+[ ] Create first admin account using /api/auth/setup.
+[ ] Remove SETUP_SECRET from Render after admin creation.
+[ ] Set real Render API URL in frontend/config.js.
+[ ] Publish frontend files to GitHub Pages.
+[ ] Set Render FRONTEND_ORIGINS to https://rrashmi-creations.github.io
+[ ] Test from phone and a second device: add/edit product, upload image, change settings.
+[ ] Test order creation and admin order status.
+[ ] Back up database and confirm Cloudinary usage/limits.
