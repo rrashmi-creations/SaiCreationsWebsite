@@ -202,6 +202,26 @@ def init_db():
         for statement in statements:
             write(conn, statement)
 
+        # Migrate older product_images tables safely.
+        # Existing images and products will be preserved.
+        image_columns = {
+            row[1]
+            for row in execute(
+                conn,
+                "PRAGMA table_info(product_images)"
+            ).fetchall()
+        }
+
+        if "content_type" not in image_columns:
+            write(
+                conn,
+                """
+                ALTER TABLE product_images
+                ADD COLUMN content_type TEXT NOT NULL
+                DEFAULT 'image/jpeg'
+                """
+            )
+
         defaults = {
             "store_name": "Sai Creation",
             "tagline": "Fashion Beyond Boundaries",
