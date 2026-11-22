@@ -81,7 +81,7 @@ def db():
 
 
 def execute(conn, sql, params=()):
-    return conn.execute(sql, list(params))
+    return conn.execute(sql, tuple(params))
 
 
 def fetch_all(conn, sql, params=()):
