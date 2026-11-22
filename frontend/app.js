@@ -106,21 +106,73 @@ function productForm(id){
  <label><span><input type="checkbox" name="is_new" ${p.is_new?"checked":""}> Mark as new arrival</span></label>
  <button class="primary full">${id?"Save changes":"Create product"}</button></form>`;
  $("#productForm").onsubmit=async e=>{
-  e.preventDefault();const f=e.target,fd=new FormData(f),file=f.elements.image.files[0];let image_url=fd.get("image_url");
+  e.preventDefault();
+
+  const f=e.target;
+  const fd=new FormData(f);
+  const file=f.elements.image.files[0];
+
   try{
-   if(file)image_url=await uploadImage(file);
-   const body={name:fd.get("name"),category:fd.get("category"),price:Number(fd.get("price")),offer_price:Number(fd.get("offer_price"))||0,stock:Number(fd.get("stock"))||0,sizes:fd.get("sizes"),fabric:fd.get("fabric"),image_url,description:fd.get("description"),is_new:f.elements.is_new.checked};
-   await api(id?`/api/admin/products/${id}`:"/api/admin/products",{method:id?"PUT":"POST",body:JSON.stringify(body)});
-   await refreshProducts();toast("Product saved to cloud database");adminPanel("Products");
-  }catch(err){toast(err.message);}
- };
+    const body={
+      name:fd.get("name"),
+      category:fd.get("category"),
+      price:Number(fd.get("price")),
+      offer_price:Number(fd.get("offer_price"))||0,
+      stock:Number(fd.get("stock"))||0,
+      sizes:fd.get("sizes"),
+      fabric:fd.get("fabric"),
+      image_url:fd.get("image_url"),
+      description:fd.get("description"),
+      is_new:f.elements.is_new.checked
+    };
+
+    // First create or update the product.
+    const saved=await api(
+      id ? `/api/admin/products/${id}` : "/api/admin/products",
+      {
+        method:id ? "PUT" : "POST",
+        body:JSON.stringify(body)
+      }
+    );
+
+    // Then upload the image against the saved product ID.
+    if(file){
+      body.image_url=await uploadImage(saved.id,file);
+
+      // Save the image URL in the product record.
+      await api(`/api/admin/products/${saved.id}`,{
+        method:"PUT",
+        body:JSON.stringify(body)
+      });
+    }
+
+    await refreshProducts();
+    toast("Product and image saved successfully");
+    adminPanel("Products");
+
+  }catch(err){
+    toast(err.message);
+  }
+};
 }
-async function uploadImage(file){
- if(file.size>8*1024*1024)throw new Error("Image must be smaller than 8 MB.");
- const sig=await api("/api/admin/cloudinary-signature",{method:"POST",body:"{}"});
- const fd=new FormData();fd.append("file",file);fd.append("api_key",sig.api_key);fd.append("timestamp",sig.timestamp);fd.append("signature",sig.signature);fd.append("folder",sig.folder);
- const res=await fetch(`https://api.cloudinary.com/v1_1/${sig.cloud_name}/image/upload`,{method:"POST",body:fd});const data=await res.json();
- if(!res.ok)throw new Error(data.error?.message||"Image upload failed.");return data.secure_url;
+async function uploadImage(productId,file){
+
+  if(file.size>10*1024*1024){
+    throw new Error("Image must be smaller than 10 MB.");
+  }
+
+  const fd=new FormData();
+  fd.append("file",file);
+
+  const data=await api(
+    `/api/admin/products/${encodeURIComponent(productId)}/images`,
+    {
+      method:"POST",
+      body:fd
+    }
+  );
+
+  return API+data.url;
 }
 async function deleteProduct(id){if(!confirm("Delete this product permanently?"))return;try{await api(`/api/admin/products/${id}`,{method:"DELETE"});await refreshProducts();adminPanel("Products");toast("Product deleted");}catch(e){toast(e.message);}}
 function settingsForm(){
