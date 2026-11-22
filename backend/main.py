@@ -73,7 +73,6 @@ def db():
             detail="Turso database credentials are missing."
         )
 
-    # Correct connection method for libsql-experimental
     return libsql.connect(
         TURSO_DATABASE_URL,
         auth_token=TURSO_AUTH_TOKEN
@@ -113,7 +112,7 @@ def now():
 
 
 # --------------------------------------------------
-# DATABASE INITIALIZATION
+# DATABASE INITIALIZATION AND MIGRATIONS
 # --------------------------------------------------
 
 def init_db():
@@ -202,8 +201,9 @@ def init_db():
         for statement in statements:
             write(conn, statement)
 
-        # Migrate older product_images tables safely.
-        # Existing images and products will be preserved.
+        # Check existing product_images table columns.
+        # This supports older database versions without deleting data.
+
         image_columns = {
             row[1]
             for row in execute(
@@ -211,6 +211,8 @@ def init_db():
                 "PRAGMA table_info(product_images)"
             ).fetchall()
         }
+
+        # Add content_type if missing.
 
         if "content_type" not in image_columns:
             write(
@@ -221,6 +223,22 @@ def init_db():
                 DEFAULT 'image/jpeg'
                 """
             )
+            image_columns.add("content_type")
+
+        # Add image_type if missing.
+
+        if "image_type" not in image_columns:
+            write(
+                conn,
+                """
+                ALTER TABLE product_images
+                ADD COLUMN image_type TEXT NOT NULL
+                DEFAULT 'image/jpeg'
+                """
+            )
+            image_columns.add("image_type")
+
+        # Default store settings.
 
         defaults = {
             "store_name": "Sai Creation",
@@ -780,13 +798,21 @@ async def upload_product_image(
             conn,
             """
             INSERT INTO product_images
-            (id, product_id, image_data, content_type, created_at)
-            VALUES (?, ?, ?, ?, ?)
+            (
+                id,
+                product_id,
+                image_data,
+                content_type,
+                image_type,
+                created_at
+            )
+            VALUES (?, ?, ?, ?, ?, ?)
             """,
             (
                 image_id,
                 product_id,
                 image_bytes,
+                "image/jpeg",
                 "image/jpeg",
                 now()
             )
