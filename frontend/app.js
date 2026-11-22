@@ -100,7 +100,7 @@ function productForm(id){
  <label>Sizes<input name="sizes" value="${esc(p.sizes||"")}" placeholder="S, M, L, XL"></label>
  <label>Fabric<input name="fabric" value="${esc(p.fabric||"")}" placeholder="Cotton, rayon etc"></label>
  <label class="full">Product photo<input name="image" type="file" accept="image/jpeg,image/png,image/webp"></label>
- <p class="formHint">Images upload to your Cloudinary account and are then visible on every device. Maximum 8 MB per image.</p>
+<p class="formHint">Images are compressed and stored securely in your Turso database. Maximum 10 MB per image.</p>
  <label class="full">Existing image URL<input name="image_url" value="${esc(p.image_url||"")}" placeholder="https://..."></label>
  <label class="full">Description<textarea name="description">${esc(p.description||"")}</textarea></label>
  <label><span><input type="checkbox" name="is_new" ${p.is_new?"checked":""}> Mark as new arrival</span></label>
